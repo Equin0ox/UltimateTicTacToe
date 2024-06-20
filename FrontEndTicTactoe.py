@@ -45,17 +45,19 @@ numOfTurns = 0
 SetSpot = False
 
 # Colors
-BG_COLOR = (200,50,111)
-LINE_COLOR = (255,100,150)
+BG_COLOR = (200, 50, 111)
+LINE_COLOR = (255, 100, 150)
 CIRCLE_COLOR = (239, 231, 200)
 CROSS_COLOR = (66, 66, 66)
-background = (111,111,111)
+background = (111, 111, 111)
+WHITE = (255, 255, 255)
+INVERSE_COLOR = (255 - LINE_COLOR[0], 255 - LINE_COLOR[1], 255 - LINE_COLOR[2])
 
 board = np.zeros((BOARD_ROWS, BOARD_COLS))
 
 
 def update_values():
-    global line_width, BOARD_ROWS, BOARD_COLS, square_size, cross_width, circle_width, circle_radius, space
+    global line_width, BOARD_ROWS, BOARD_COLS, square_size, cross_width, circle_width, circle_radius, space, INVERSE_COLOR
 
     line_width = min(10, int(play_board / 100))
     BOARD_ROWS, BOARD_COLS = 9, 9
@@ -64,16 +66,14 @@ def update_values():
     circle_width = min(15, int(play_board / 66))
     cross_width = min(25, int(play_board / 40))
     space = square_size // 5
+    INVERSE_COLOR = (255 - LINE_COLOR[0], 255 - LINE_COLOR[1], 255 - LINE_COLOR[2])
 
 
-def draw_figures():
+def draw_figures(): #vykresluje symboly
     for i in range(3):
         for j in range(3):
             for k in range(3):
                 for l in range(3):
-
-                    #print("x =", (i*3) + (k+1), "y =",  (j*3) + (l+1), "symbol =",game[i][j].field[k][l].symbol)
-
                     if game[i][j].field[k][l].symbol == "o":
                         pygame.draw.circle(screen, CIRCLE_COLOR, ((WIDTH // 2 - play_board // 2) + (int((i * play_board//3) + (k * square_size)) + square_size // 2),
                                                                         (HEIGHT // 2 - play_board // 2) + (int((j * play_board/3) + (l * square_size)) + square_size // 2)), circle_radius, circle_width)
@@ -90,6 +90,7 @@ def textsig(a):
 
 
 def draw_lines():
+
     for i in range(BOARD_ROWS+1):
         if i % 3 == 0:
             pygame.draw.line(screen, LINE_COLOR, (round((WIDTH/2)-(play_board/2)), round((HEIGHT/2)-(play_board/2)) + i * square_size), (round((WIDTH/2)+(play_board/2)), round((HEIGHT/2)-(play_board/2)) + i * square_size), line_width*2)
@@ -101,12 +102,41 @@ def draw_lines():
         pygame.draw.line(screen, LINE_COLOR, (round((WIDTH/2)-(play_board/2)) + i * square_size, round((HEIGHT/2)-(play_board/2))), (round((WIDTH/2)-(play_board/2)) + i * square_size, round((HEIGHT/2)+(play_board/2))), line_width)
 
 
+def draw_help_lines():
+    for i in range(BOARD_ROWS+1):
+        for j in range(BOARD_ROWS+1):
+            if (i >= AvalaibleRowMin - 1 and i <= AvalaibleRowMax - 1) and (
+                    j >= AvalaibleColMin - 1 and j <= AvalaibleColMax):
+                if j % 3 == 0:
+                    pygame.draw.line(screen, INVERSE_COLOR,
+                                     (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                                      round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)),
+                                     (round((WIDTH / 2) - (play_board / 2)) + square_size + (i * square_size),
+                                      round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)), line_width * 2)
+                pygame.draw.line(screen, INVERSE_COLOR,
+                                 (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                                  round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)),
+                                 (round((WIDTH / 2) - (play_board / 2)) + square_size + (i * square_size),
+                                  round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)), line_width)
+
+            if (i >= AvalaibleRowMin-1 and i <= AvalaibleRowMax) and (j >= AvalaibleColMin-1 and j <= AvalaibleColMax-1):
+                if i % 3 == 0:
+                    pygame.draw.line(screen, INVERSE_COLOR,
+                    (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                     round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)),
+                    (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                     round((HEIGHT / 2) - (play_board / 2)) + square_size + (j * square_size)), line_width * 2)
+                pygame.draw.line(screen, INVERSE_COLOR,
+                                 (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                                  round((HEIGHT / 2) - (play_board / 2)) + (j * square_size)),
+                                 (round((WIDTH / 2) - (play_board / 2)) + (i * square_size),
+                                  round((HEIGHT / 2) - (play_board / 2)) + square_size + (j * square_size)),
+                                 line_width)
 
 
 def CheckForSpaceAndSet(arr):
-    drawings()
     global AvalaibleRowMin, AvalaibleRowMax, AvalaibleColMin, AvalaibleColMax, numOfTurns, SetSpot, gameNotOver, numOfTurns
-    if(((arr[0] < 9) & (arr[0] > -1)) & ((arr[1] < 9) & (arr[1] > -1))):
+    if(((arr[0] < AvalaibleRowMax) & (arr[0] >= AvalaibleRowMin-1)) & ((arr[1] < AvalaibleColMax) & (arr[1] >= AvalaibleColMin-1))):
         if numOfTurns % 2 == 0:
             player = "x"
         else:
@@ -136,8 +166,9 @@ def CheckForSpaceAndSet(arr):
                 AvalaibleRowMax = 9
                 AvalaibleColMin = 1
                 AvalaibleColMax = 9
-            numOfTurns += 1
-            SetSpot = True
+            else:
+                numOfTurns += 1
+                SetSpot = True
         else:
             textsig("spot taken")
             print("spot taken")
@@ -182,6 +213,7 @@ def drawings():
     draw_sq()
     draw_lines()
     draw_figures()
+    draw_help_lines()
 
 
 def draw_sq():
@@ -219,6 +251,8 @@ while running:
             clicked_col = int(mouseXY[1] // square_size)
 
             CheckForSpaceAndSet([clicked_row, clicked_col])
+            drawings()
+
             draw_figures()
 
         elif event.type == pygame.VIDEORESIZE:
